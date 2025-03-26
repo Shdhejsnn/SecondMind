@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Research Assistant - The Second Mind</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h2>Research Topic</h2>
+            <input type="text" id="topicInput" placeholder="e.g., Machine Unlearning, Quantum Computing">
+            <button id="researchBtn" onclick="startResearch()">
+                <span id="btnText">Start Research</span>
+                <span id="btnSpinner" style="display: none;" class="loading-spinner"></span>
+            </button>
+            
+            <div class="progress-container">
+                <div class="progress-text">
+                    <span id="progressStatus">Ready</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" id="researchProgress"></div>
+                </div>
+            </div>
+            
+            <div class="agent-activity">
+                <h3>Agent Activity</h3>
+                <div class="agent-list" id="agentStatus">
+                    <div class="agent-item" id="generationAgent">
+                        <span class="agent-icon">🧠</span>
+                        <div class="agent-content">
+                            <div class="agent-name">Generation Agent</div>
+                            <div class="agent-status">Ready</div>
+                        </div>
+                        <div class="status-indicator status-ready"></div>
+                    </div>
+                    <div class="agent-item" id="reflectionAgent">
+                        <span class="agent-icon">🔍</span>
+                        <div class="agent-content">
+                            <div class="agent-name">Reflection Agent</div>
+                            <div class="agent-status">Ready</div>
+                        </div>
+                        <div class="status-indicator status-ready"></div>
+                    </div>
+                    <div class="agent-item" id="rankingAgent">
+                        <span class="agent-icon">📊</span>
+                        <div class="agent-content">
+                            <div class="agent-name">Ranking Agent</div>
+                            <div class="agent-status">Ready</div>
+                        </div>
+                        <div class="status-indicator status-ready"></div>
+                    </div>
+                    <div class="agent-item" id="evolutionAgent">
+                        <span class="agent-icon">🔄</span>
+                        <div class="agent-content">
+                            <div class="agent-name">Evolution Agent</div>
+                            <div class="agent-status">Ready</div>
+                        </div>
+                        <div class="status-indicator status-ready"></div>
+                    </div>
+                    <div class="agent-item" id="proximityAgent">
+                        <span class="agent-icon">🔗</span>
+                        <div class="agent-content">
+                            <div class="agent-name">Proximity Agent</div>
+                            <div class="agent-status">Ready</div>
+                        </div>
+                        <div class="status-indicator status-ready"></div>
+                    </div>
+                    <div class="agent-item" id="metaReviewAgent">
+                        <span class="agent-icon">📝</span>
+                        <div class="agent-content">
+                            <div class="agent-name">Meta-Review Agent</div>
+                            <div class="agent-status">Ready</div>
+                        </div>
+                        <div class="status-indicator status-ready"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="research-steps" id="researchSteps">
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Research Results</h2>
+            <div id="resultsContainer">
+                <p style="color: var(--gray);">Enter a research topic to begin the discovery process.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function startResearch() {
+            const topic = document.getElementById("topicInput").value.trim();
+            const btn = document.getElementById("researchBtn");
+            const btnText = document.getElementById("btnText");
+            const btnSpinner = document.getElementById("btnSpinner");
+            const progressBar = document.getElementById("researchProgress");
+            const progressStatus = document.getElementById("progressStatus");
+            const progressPercent = document.getElementById("progressPercent");
+            const resultsContainer = document.getElementById("resultsContainer");
+            const stepsContainer = document.getElementById("researchSteps");
+            
+            if (!topic) {
+                alert("Please enter a research topic");
+                return;
+            }
+            
+            btn.disabled = true;
+            btnText.textContent = "Researching";
+            btnSpinner.style.display = "inline-block";
+            progressBar.style.width = "0%";
+            progressStatus.textContent = "Initializing research";
+            progressPercent.textContent = "0%";
+            resultsContainer.innerHTML = `
+                <div style="display: flex; justify-content: center; padding: 2rem;">
+                    <div class="loading-spinner"></div>
+                </div>
+            `;
+            stepsContainer.innerHTML = '';
+            
+            document.querySelectorAll(".agent-item").forEach(el => {
+                el.className = "agent-item";
+                const status = el.querySelector(".agent-status");
+                status.textContent = "Ready";
+                const indicator = el.querySelector(".status-indicator");
+                indicator.className = "status-indicator status-ready";
+            });
+            
+            try {
+                const agentPhases = [
+                    { id: "generation", status: "Formulating research hypothesis", progress: 10 },
+                    { id: "proximity", status: "Finding related research", progress: 20 },
+                    { id: "reflection", status: "Gathering research papers", progress: 30 },
+                    { id: "evolution", status: "Refining hypothesis", progress: 60 },
+                    { id: "ranking", status: "Evaluating papers", progress: 80 },
+                    { id: "metaReview", status: "Reviewing process", progress: 90 }
+                ];
+                
+                for (const phase of agentPhases) {
+                    updateAgentStatus(phase.id, 'processing', phase.status);
+                    progressStatus.textContent = phase.status;
+                    progressBar.style.width = `${phase.progress}%`;
+                    progressPercent.textContent = `${phase.progress}%`;
+                    
+                    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+                    updateAgentStatus(phase.id, 'completed');
+                }
+                
+                const response = await fetch("http://localhost:5000/research", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ topic })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+                
+                const data = await response.json();
+                
+                progressStatus.textContent = "Research completed";
+                progressBar.style.width = "100%";
+                progressPercent.textContent = "100%";
+                
+                displayResults(data);
+                
+            } catch (error) {
+                console.error("Research failed:", error);
+                progressStatus.textContent = "Research failed";
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        ❌ Research failed: ${error.message}
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "Start Research";
+                btnSpinner.style.display = "none";
+            }
+        }
+        
+        function updateAgentStatus(agentId, status, detail = '') {
+            const element = document.getElementById(`${agentId}Agent`);
+            if (element) {
+                const statusElement = element.querySelector(".agent-status");
+                const indicator = element.querySelector(".status-indicator");
+                
+                element.className = "agent-item";
+                indicator.className = "status-indicator status-ready";
+                
+                if (status === 'processing') {
+                    element.classList.add("processing");
+                    statusElement.textContent = detail || "Processing...";
+                    indicator.className = "status-indicator status-processing";
+                    
+                    const stepsContainer = document.getElementById("researchSteps");
+                    const step = document.createElement("div");
+                    step.className = "research-step";
+                    step.innerHTML = `
+                        <div class="step-icon">${element.querySelector(".agent-icon").textContent}</div>
+                        <div class="step-content">
+                            <h4 class="step-title">${element.querySelector(".agent-name").textContent} Working</h4>
+                            <p class="step-detail">${detail || "Processing request..."}</p>
+                        </div>
+                    `;
+                    stepsContainer.appendChild(step);
+                    stepsContainer.scrollTop = stepsContainer.scrollHeight;
+                    
+                } else if (status === 'completed') {
+                    element.classList.add("completed");
+                    statusElement.textContent = "Completed";
+                    indicator.className = "status-indicator status-completed";
+                }
+            }
+        }
+        
+        <!-- ... (keep all HTML until displayResults function) -->
+
+        function displayResults(data) {
+            const resultsContainer = document.getElementById("resultsContainer");
+            const progressStatus = document.getElementById("progressStatus");
+            
+            progressStatus.textContent = `Research completed - Score: ${data.score}/10`;
+            
+            let html = `
+                <div class="score-display">
+                    <span>Research Quality Score:</span>
+                    <span class="score-value">${data.score}/10</span>
+                </div>
+                
+                <h3>Top Result</h3>
+                <div class="result-card">
+                    <h4 class="result-title">${data.top_paper.title || "No top paper found"}</h4>
+                    <div class="result-meta">
+                        ${data.top_paper.authors ? `<span>${data.top_paper.authors.join(", ")}</span>` : ''}
+                        ${data.top_paper.published ? `<span>${data.top_paper.published}</span>` : ''}
+                        ${data.top_paper.source ? `<span class="badge badge-${data.top_paper.source.toLowerCase()}">${data.top_paper.source}</span>` : ''}
+                    </div>
+                    ${data.top_paper.abstract ? `<div class="result-abstract">${data.top_paper.abstract}</div>` : ''}
+                    ${data.top_paper.link ? `<a href="${data.top_paper.link}" target="_blank" class="result-link">View paper →</a>` : ''}
+                    ${data.top_paper.pdf_link ? `<a href="${data.top_paper.pdf_link}" target="_blank" class="result-link">Download PDF →</a>` : ''}
+                </div>
+            `;
+            
+            if (data.related) {
+                html += `
+                    <div class="related-research">
+                        <h3>Related Research Insights</h3>
+                        ${Array.isArray(data.related) ? 
+                          `<ul class="related-list">${data.related.map(item => `<li>${item}</li>`).join('')}</ul>` : 
+                          `<p>${data.related}</p>`}
+                    </div>
+                `;
+            }
+            
+            html += `<h3>Research Process</h3>`;
+            data.insights.forEach(insight => {
+                html += `<div class="research-step">
+                    <div class="step-icon">🔍</div>
+                    <div class="step-content">
+                        <p class="step-detail">${insight}</p>
+                    </div>
+                </div>`;
+            });
+            
+            if (data.meta_feedback && data.meta_feedback.length > 0) {
+                html += `<h3>Process Feedback</h3>`;
+                data.meta_feedback.forEach(fb => {
+                    html += `<div class="research-step">
+                        <div class="step-icon">📝</div>
+                        <div class="step-content">
+                            <p class="step-detail">${fb}</p>
+                        </div>
+                    </div>`;
+                });
+            }
+
+if (data.related_papers && data.related_papers.length > 0) {
+    html += `<h3>Related Papers</h3>`;
+    data.related_papers.forEach(paper => {
+        html += `
+            <div class="result-card">
+                <h4 class="result-title">${paper.title}</h4>
+                <div class="result-meta">
+                    <span>Score: ${paper.score}/10</span>
+                    <span class="badge badge-${paper.source.toLowerCase()}">${paper.source}</span>
+                </div>
+                <a href="${paper.link}" target="_blank" class="result-link">View paper →</a>
+            </div>
+        `;
+    });
+}
+            
+            resultsContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
